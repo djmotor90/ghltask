@@ -31,16 +31,19 @@ WORKDIR /app
 
 ENV NODE_ENV production
 
-# Copy built files
-COPY --from=builder /app/apps/web/.next ./apps/web/.next
-COPY --from=builder /app/apps/web/public ./apps/web/public
-COPY --from=builder /app/apps/web/package.json ./apps/web/
+# Copy built files and node_modules
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
+COPY --from=builder /app/apps/web/.next ./apps/web/.next
+COPY --from=builder /app/apps/web/package.json ./apps/web/
+
+# Copy public directory if it exists
+COPY --from=builder /app/apps/web/public ./apps/web/public 2>/dev/null || true
 
 EXPOSE 3000
 
 ENV PORT 3000
 
 # Start Next.js from the web directory
-CMD ["node_modules/.bin/next", "start", "-p", "3000", "apps/web"]
+WORKDIR /app/apps/web
+CMD ["../../node_modules/.bin/next", "start", "-p", "3000"]
