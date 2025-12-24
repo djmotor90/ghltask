@@ -1,3 +1,1 @@
-specVersion: 1.0.0
-info:
-  name: ghltask
+# Empty project.yml to prevent Digital Ocean from detecting packages as functions
