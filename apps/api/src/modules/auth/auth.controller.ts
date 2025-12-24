@@ -8,15 +8,23 @@ import { JWTPayload } from '@ghl-task/types';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Get('ghl/authorize')
-  ghlAuthorize(): { url: string } {
+  @Get('authorize')
+  authorize(): { url: string } {
     const url = this.authService.getGHLAuthUrl();
     return { url };
   }
 
-  @Get('ghl/callback')
-  async ghlCallback(@Query('code') code: string): Promise<{ accessToken: string; user: any }> {
-    return this.authService.handleOAuthCallback(code);
+  @Get('callback')
+  async callback(@Query('code') code: string): Promise<{ accessToken: string; user: any }> {
+    try {
+      console.log(`[Auth] Handling OAuth callback with code: ${code}`);
+      const result = await this.authService.handleOAuthCallback(code);
+      console.log(`[Auth] OAuth callback successful for user: ${result.user.email}`);
+      return result;
+    } catch (error) {
+      console.error(`[Auth] OAuth callback failed:`, error);
+      throw error;
+    }
   }
 
   @UseGuards(JwtAuthGuard)
