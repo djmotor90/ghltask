@@ -1,1 +1,2 @@
-# Empty project.yml to prevent Digital Ocean from detecting packages as functions
+# Empty project.yml - forces Digital Ocean to use standard app deployment
+# No serverless functions in this project
