@@ -1,4 +1,4 @@
-{
+module.exports = {
   "apps": [
     {
       "name": "ghl-api",
@@ -7,7 +7,7 @@
       "instances": "max",
       "exec_mode": "cluster",
       "env": {
-        "NODE_ENV": "production",
+        "NODE_ENV": "development",
         "PORT": 3001
       },
       "error_file": "logs/api-error.log",
@@ -19,10 +19,10 @@
       "script": "node_modules/.bin/next",
       "args": "start -p 3000",
       "cwd": "./apps/web",
-      "instances": 2,
-      "exec_mode": "cluster",
+      "instances": 1,
+      "exec_mode": "fork",
       "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "development"
       },
       "error_file": "logs/web-error.log",
       "out_file": "logs/web-out.log",
