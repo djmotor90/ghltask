@@ -5,17 +5,20 @@ WORKDIR /app
 # Copy everything
 COPY . .
 
-# Install all dependencies including PM2
+# Install all dependencies
 RUN npm install --legacy-peer-deps
 
 # Build the application
 RUN npm run build
 
+# Create logs directory
+RUN mkdir -p logs
+
 # Install PM2 globally
 RUN npm install -g pm2
 
 # Expose ports
-EXPOSE 3000 3001
+EXPOSE 3000
 
-# Start with PM2
-CMD ["pm2-runtime", "start", "ecosystem.config.js"]
+# Start only Next.js (combined frontend+backend)
+CMD ["node_modules/.bin/next", "start", "-p", "3000"]
