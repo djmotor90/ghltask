@@ -1,8 +1,0 @@
-packages/
-.next/
-dist/
-node_modules/
-.git/
-.env.local
-.turbo/
-logs/
