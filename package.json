@@ -1,0 +1,30 @@
+{
+  "name": "ghl-task-management",
+  "version": "0.0.1",
+  "description": "Task management SaaS integrated with GoHighLevel",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "db:migrate": "cd apps/api && prisma migrate dev",
+    "db:push": "cd apps/api && prisma db push",
+    "db:reset": "cd apps/api && prisma migrate reset",
+    "db:seed": "cd apps/api && npx ts-node src/prisma/seed.ts",
+    "db:studio": "cd apps/api && prisma studio"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "prettier": "^3.1.0",
+    "turbo": "^1.10.16",
+    "typescript": "^5.3.3"
+  }
+}
