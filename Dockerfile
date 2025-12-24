@@ -20,8 +20,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build the web app
-RUN npm run build
+# Build packages first, then apps
+RUN cd packages/types && npm run build
+RUN cd apps/api && npm run build  
+RUN cd apps/web && npm run build
 
 # Production stage
 FROM base AS runner
