@@ -22,6 +22,10 @@ COPY . .
 
 # Build packages first, then apps
 RUN cd packages/types && npm run build
+
+# Generate Prisma client before building API
+RUN cd apps/api && npx prisma generate
+
 RUN cd apps/api && npm run build  
 RUN cd apps/web && npm run build
 
@@ -45,10 +49,7 @@ COPY --from=builder /app/apps/web/package.json ./apps/web/
 COPY --from=builder /app/apps/web/public ./apps/web/public
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/
-
-# Copy Prisma schema and generate client in runner stage
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-RUN cd apps/api && npx prisma generate
 
 # Copy ecosystem config
 COPY ecosystem.config.js ./
