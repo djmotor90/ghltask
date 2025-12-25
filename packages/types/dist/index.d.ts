@@ -214,8 +214,8 @@ export interface JWTPayload {
     email: string;
     organization_id: string;
     role: UserRole;
-    iat: number;
-    exp: number;
+    iat?: number;
+    exp?: number;
 }
 export interface GHLAuthConfig {
     client_id: string;
@@ -227,6 +227,9 @@ export interface GHLTokenResponse {
     refresh_token?: string;
     token_type: string;
     expires_in: number;
+    userId?: string;
+    companyId?: string;
+    locationId?: string;
 }
 export interface GHLUser {
     id: string;
