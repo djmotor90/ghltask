@@ -5,32 +5,31 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { useTaskStore } from '@/store/tasks';
 import { spacesApi, tasksApi, organizationsApi } from '@/lib/api';
-import { Task, Space } from '@ghl-task/types';
 
 export default function Dashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
-  const [spaces, setSpaces] = useState<Space[]>([]);
-  const [selectedSpace, setSelectedSpace] = useState<Space | null>(null);
+  const [spaces, setSpaces] = useState<any[]>([]);
+  const [selectedSpace, setSelectedSpace] = useState<any>(null);
   const [organization, setOrganization] = useState<any>(null);
   
-  const { isAuthenticated, setAuth, user, logout } = useAuthStore();
+  const { user, token, setToken, setUser, logout } = useAuthStore();
   const { tasks, setTasks } = useTaskStore();
 
   // Handle OAuth callback token
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (token) {
-      setAuth(token, null); // User data will be fetched below
+    const tokenParam = searchParams.get('token');
+    if (tokenParam) {
+      setToken(tokenParam);
       // Clean URL
       window.history.replaceState({}, '', '/dashboard');
     }
-  }, [searchParams, setAuth]);
+  }, [searchParams, setToken]);
 
   // Fetch initial data
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!token) {
       router.push('/');
       return;
     }
@@ -41,8 +40,8 @@ export default function Dashboard() {
 
         // Fetch organization and spaces
         const [orgRes, spacesRes] = await Promise.all([
-          organizationsApi.getMe(),
-          spacesApi.list(),
+          organizationsApi.getProfile(),
+          spacesApi.getAll(),
         ]);
 
         setOrganization(orgRes.data);
@@ -59,7 +58,7 @@ export default function Dashboard() {
     }
 
     loadData();
-  }, [isAuthenticated, router]);
+  }, [token, router]);
 
   const handleLogout = () => {
     logout();
