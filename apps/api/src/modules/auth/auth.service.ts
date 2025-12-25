@@ -178,6 +178,8 @@ export class AuthService {
       where: { ghl_account_id: locationId },
     });
 
+    const isNewOrganization = !organization;
+
     if (!organization) {
       organization = await this.prisma.organization.create({
         data: {
@@ -188,15 +190,6 @@ export class AuthService {
           ghl_access_token: ghlToken.access_token,
           ghl_refresh_token: ghlToken.refresh_token,
           ghl_token_expires: new Date(Date.now() + ghlToken.expires_in * 1000),
-        },
-      });
-
-      // Create default space
-      await this.prisma.space.create({
-        data: {
-          organization_id: organization.id,
-          name: 'Default',
-          created_by: '', // Will be set after user creation
         },
       });
     } else {
@@ -231,20 +224,17 @@ export class AuthService {
           is_active: true,
         },
       });
+    }
 
-      // Update space creator
-      const spaces = await this.prisma.space.findMany({
-        where: { organization_id: organization.id },
+    // Create default space for new organizations
+    if (isNewOrganization) {
+      await this.prisma.space.create({
+        data: {
+          organization_id: organization.id,
+          name: 'Default',
+          created_by: user.id,
+        },
       });
-
-      for (const space of spaces) {
-        if (!space.created_by) {
-          await this.prisma.space.update({
-            where: { id: space.id },
-            data: { created_by: user.id },
-          });
-        }
-      }
     }
 
     // Generate JWT
