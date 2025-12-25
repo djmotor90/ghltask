@@ -25,9 +25,6 @@ RUN cd packages/types && npm run build
 RUN cd apps/api && npm run build  
 RUN cd apps/web && npm run build
 
-# Generate Prisma client
-RUN cd apps/api && npx prisma generate
-
 # Create public directory if it doesn't exist
 RUN mkdir -p apps/web/public
 
@@ -48,6 +45,10 @@ COPY --from=builder /app/apps/web/package.json ./apps/web/
 COPY --from=builder /app/apps/web/public ./apps/web/public
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/
+
+# Copy Prisma schema and generate client in runner stage
+COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+RUN cd apps/api && npx prisma generate
 
 # Copy ecosystem config
 COPY ecosystem.config.js ./
