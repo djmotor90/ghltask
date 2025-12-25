@@ -25,6 +25,9 @@ RUN cd packages/types && npm run build
 RUN cd apps/api && npm run build  
 RUN cd apps/web && npm run build
 
+# Generate Prisma client
+RUN cd apps/api && npx prisma generate
+
 # Create public directory if it doesn't exist
 RUN mkdir -p apps/web/public
 
