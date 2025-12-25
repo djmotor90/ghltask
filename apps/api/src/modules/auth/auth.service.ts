@@ -243,8 +243,6 @@ export class AuthService {
       email: user.email,
       organization_id: organization.id,
       role: user.role as any,
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 15 * 60, // 15 minutes
     };
 
     const accessToken = this.jwtService.sign(payload);
@@ -266,8 +264,6 @@ export class AuthService {
       email: user.email,
       organization_id: user.organization_id,
       role: user.role as any,
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 15 * 60,
     };
 
     const accessToken = this.jwtService.sign(payload);
