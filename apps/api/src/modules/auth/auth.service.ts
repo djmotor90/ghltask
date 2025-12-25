@@ -19,13 +19,22 @@ export class AuthService {
 
     const state = Math.random().toString(36).substring(7);
 
-    return `https://oauth.gohighlevel.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&state=${state}`;
+    console.log('[OAuth] Generating auth URL', { clientId, redirectUri });
+
+    return `https://marketplace.gohighlevel.com/oauth/chooselocation?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${state}`;
   }
 
   async exchangeCodeForToken(code: string): Promise<GHLTokenResponse> {
     const clientId = this.configService.get('GHL_CLIENT_ID');
     const clientSecret = this.configService.get('GHL_CLIENT_SECRET');
     const redirectUri = this.configService.get('GHL_REDIRECT_URI');
+
+    console.log('[OAuth] Exchanging code for token', {
+      endpoint: 'https://services.leadconnectorhq.com/oauth/token',
+      clientId,
+      redirectUri,
+      codeLength: code?.length,
+    });
 
     try {
       const response = await axios.post(
@@ -36,12 +45,20 @@ export class AuthService {
           code,
           grant_type: 'authorization_code',
           redirect_uri: redirectUri,
+          user_type: 'Company',
         },
       );
 
+      console.log('[OAuth] Token exchange successful');
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to exchange code for token: ${error.message}`);
+      console.error('[OAuth] Token exchange failed', {
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        data: error?.response?.data,
+        message: error?.message,
+      });
+      throw new Error(`Failed to exchange code for token: ${error?.response?.status} ${JSON.stringify(error?.response?.data)}`);
     }
   }
 
