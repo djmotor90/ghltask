@@ -11,14 +11,25 @@ services:
     value: production
   - key: DATABASE_URL
     scope: RUN_AND_BUILD_TIME
+  - key: JWT_SECRET
+    scope: RUN_AND_BUILD_TIME
+  - key: JWT_EXPIRATION
+    value: "15m"
+    scope: RUN_AND_BUILD_TIME
   - key: GHL_CLIENT_ID
     scope: RUN_AND_BUILD_TIME
   - key: GHL_CLIENT_SECRET
     scope: RUN_AND_BUILD_TIME
   - key: GHL_REDIRECT_URI
     scope: RUN_AND_BUILD_TIME
+  - key: API_PORT
+    value: "3001"
+  - key: WEB_URL
+    value: "https://seashell-app-jr3fc.ondigitalocean.app"
   - key: NEXT_PUBLIC_API_URL
+    value: "https://seashell-app-jr3fc.ondigitalocean.app/api"
     scope: RUN_AND_BUILD_TIME
   - key: NEXT_PUBLIC_WEB_URL
+    value: "https://seashell-app-jr3fc.ondigitalocean.app"
     scope: RUN_AND_BUILD_TIME
   http_port: 3000
