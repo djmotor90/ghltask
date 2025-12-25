@@ -71,45 +71,78 @@ export class AuthService {
     }
   }
 
-  async getGHLUser(accessToken: string): Promise<GHLUser> {
+  async getGHLUser(accessToken: string, userId: string): Promise<GHLUser> {
+    const BASE_URL = 'https://services.leadconnectorhq.com';
+    
     try {
       const response = await axios.get(
-        'https://api.gohighlevel.com/v1/me',
+        `${BASE_URL}/users/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
+            Version: '2021-07-28',
+            Accept: 'application/json',
           },
+          timeout: 15000,
         },
       );
 
-      return response.data.data;
+      return response.data;
     } catch (error) {
-      throw new Error(`Failed to fetch GHL user: ${error.message}`);
+      console.error('[OAuth] Failed to fetch GHL user', {
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        data: error?.response?.data,
+        message: error?.message,
+      });
+      throw new Error(`Failed to fetch GHL user: ${error?.response?.status} ${JSON.stringify(error?.response?.data || error.message)}`);
     }
   }
 
-  async getGHLAccount(accessToken: string): Promise<any> {
+  async getGHLAccount(accessToken: string, companyId: string): Promise<any> {
+    const BASE_URL = 'https://services.leadconnectorhq.com';
+    
     try {
       const response = await axios.get(
-        'https://api.gohighlevel.com/v1/businesses',
+        `${BASE_URL}/companies/${companyId}`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
+            Version: '2021-07-28',
+            Accept: 'application/json',
           },
+          timeout: 15000,
         },
       );
 
-      return response.data.data;
+      return response.data;
     } catch (error) {
-      throw new Error(`Failed to fetch GHL account: ${error.message}`);
+      console.error('[OAuth] Failed to fetch GHL account', {
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        data: error?.response?.data,
+        message: error?.message,
+      });
+      throw new Error(`Failed to fetch GHL account: ${error?.response?.status} ${JSON.stringify(error?.response?.data || error.message)}`);
     }
   }
 
   async handleOAuthCallback(code: string): Promise<{ accessToken: string; user: any }> {
     // Exchange code for GHL token
     const ghlToken = await this.exchangeCodeForToken(code);
-    const ghlUser = await this.getGHLUser(ghlToken.access_token);
-    const ghlAccount = await this.getGHLAccount(ghlToken.access_token);
+    
+    console.log('[OAuth] Token received', {
+      userId: ghlToken.userId,
+      companyId: ghlToken.companyId,
+      locationId: ghlToken.locationId,
+    });
+    
+    if (!ghlToken.userId || !ghlToken.companyId) {
+      throw new Error('Token response missing userId or companyId');
+    }
+    
+    const ghlUser = await this.getGHLUser(ghlToken.access_token, ghlToken.userId);
+    const ghlAccount = await this.getGHLAccount(ghlToken.access_token, ghlToken.companyId);
 
     // Find or create organization
     let organization = await this.prisma.organization.findUnique({

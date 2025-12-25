@@ -258,6 +258,9 @@ export interface GHLTokenResponse {
   refresh_token?: string;
   token_type: string;
   expires_in: number;
+  userId?: string;
+  companyId?: string;
+  locationId?: string;
 }
 
 export interface GHLUser {
