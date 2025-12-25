@@ -156,7 +156,7 @@ export class AuthService {
     // Exchange code for GHL token
     const ghlToken = await this.exchangeCodeForToken(code);
 
-    const accessToken = ghlToken.access_token;
+    const ghlAccessToken = ghlToken.access_token;
     const userId = ghlToken.userId;
     const locationId = ghlToken.locationId;
 
@@ -169,8 +169,8 @@ export class AuthService {
 
     // Fetch user and location details
     const [ghlUser, ghlLocation] = await Promise.all([
-      this.getGHLUser(accessToken, userId),
-      this.getGHLLocation(accessToken, locationId),
+      this.getGHLUser(ghlAccessToken, userId),
+      this.getGHLLocation(ghlAccessToken, locationId),
     ]);
 
     // Find or create organization (using locationId as the account identifier)

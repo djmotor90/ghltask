@@ -17,6 +17,10 @@ RUN npm install --legacy-peer-deps
 # Build stage
 FROM base AS builder
 WORKDIR /app
+
+# Install OpenSSL for Prisma (needed during build)
+RUN apk add --no-cache openssl
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
