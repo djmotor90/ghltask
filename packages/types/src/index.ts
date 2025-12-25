@@ -242,8 +242,8 @@ export interface JWTPayload {
   email: string;
   organization_id: string;
   role: UserRole;
-  iat: number;
-  exp: number;
+  iat?: number; // Optional: JWT module adds this automatically
+  exp?: number; // Optional: JWT module adds this automatically
 }
 
 // GHL OAuth Types
