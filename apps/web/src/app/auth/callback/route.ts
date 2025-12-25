@@ -4,7 +4,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get('code');
   const error = searchParams.get('error');
-  const host = request.headers.get('host') || 'task.gurver.org';
+  const host = request.headers.get('host') || 'seashell-app-jr3fc.ondigitalocean.app';
 
   // Handle errors from GHL
   if (error) {
@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Exchange code with backend API
-    const apiUrl = `https://api.gurver.org/auth/callback?code=${code}`;
+    // Exchange code with backend API (using proxy /api route)
+    const apiUrl = `https://${host}/api/auth/callback?code=${code}`;
     console.log(`[OAuth Callback] Exchanging code at: ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
