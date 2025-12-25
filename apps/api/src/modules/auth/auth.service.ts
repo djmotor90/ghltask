@@ -37,15 +37,24 @@ export class AuthService {
     });
 
     try {
+      // Create URL-encoded form data
+      const body = new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri,
+        user_type: 'Company',
+      });
+
       const response = await axios.post(
         'https://services.leadconnectorhq.com/oauth/token',
+        body.toString(),
         {
-          client_id: clientId,
-          client_secret: clientSecret,
-          code,
-          grant_type: 'authorization_code',
-          redirect_uri: redirectUri,
-          user_type: 'Company',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          timeout: 15000,
         },
       );
 
