@@ -29,7 +29,7 @@ export class AuthService {
 
     try {
       const response = await axios.post(
-        'https://oauth.gohighlevel.com/oauth/token',
+        'https://services.leadconnectorhq.com/oauth/token',
         {
           client_id: clientId,
           client_secret: clientSecret,
