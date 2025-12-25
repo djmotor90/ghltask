@@ -1,27 +1,49 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { JWTPayload, GHLTokenResponse, GHLUser } from '@ghl-task/types';
 
+const GHL_BASE = 'https://services.leadconnectorhq.com';
+const GHL_API_VERSION = '2021-07-28';
+
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
   ) {}
 
+  private http(): AxiosInstance {
+    return axios.create({
+      timeout: 20000,
+      headers: {
+        Version: GHL_API_VERSION,
+      },
+    });
+  }
+
   getGHLAuthUrl(): string {
     const clientId = this.configService.get('GHL_CLIENT_ID');
     const redirectUri = this.configService.get('GHL_REDIRECT_URI');
-
+    const scopes = this.configService.get('GHL_SCOPES') || 'locations.readonly users.readonly oauth.readonly';
     const state = Math.random().toString(36).substring(7);
 
-    console.log('[OAuth] Generating auth URL', { clientId, redirectUri });
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      scope: scopes,
+      state,
+    });
 
-    return `https://marketplace.gohighlevel.com/oauth/chooselocation?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${state}`;
+    this.logger.log('[OAuth] Generating auth URL', { clientId, redirectUri, scopes });
+
+    return `https://marketplace.gohighlevel.com/oauth/chooselocation?${params.toString()}`;
   }
 
   async exchangeCodeForToken(code: string): Promise<GHLTokenResponse> {
@@ -29,131 +51,138 @@ export class AuthService {
     const clientSecret = this.configService.get('GHL_CLIENT_SECRET');
     const redirectUri = this.configService.get('GHL_REDIRECT_URI');
 
-    console.log('[OAuth] Exchanging code for token', {
-      endpoint: 'https://services.leadconnectorhq.com/oauth/token',
+    const body = new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      code,
+      user_type: 'Company',
+    });
+
+    this.logger.log('[OAuth] Exchanging code for token', {
+      endpoint: `${GHL_BASE}/oauth/token`,
       clientId,
       redirectUri,
       codeLength: code?.length,
     });
 
     try {
-      // Create URL-encoded form data
-      const body = new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: redirectUri,
-        user_type: 'Company',
-      });
-
-      const response = await axios.post(
-        'https://services.leadconnectorhq.com/oauth/token',
+      const response = await this.http().post(
+        `${GHL_BASE}/oauth/token`,
         body.toString(),
         {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
           },
-          timeout: 15000,
         },
       );
 
-      console.log('[OAuth] Token exchange successful');
+      this.logger.log('[OAuth] Token exchange successful', {
+        userId: response.data.userId,
+        companyId: response.data.companyId,
+        locationId: response.data.locationId,
+        scope: response.data.scope,
+      });
+
       return response.data;
     } catch (error) {
-      console.error('[OAuth] Token exchange failed', {
-        status: error?.response?.status,
-        statusText: error?.response?.statusText,
-        data: error?.response?.data,
+      const r = error?.response;
+      this.logger.error('[OAuth] Token exchange failed', {
+        status: r?.status,
+        statusText: r?.statusText,
+        data: r?.data,
         message: error?.message,
       });
-      throw new Error(`Failed to exchange code for token: ${error?.response?.status} ${JSON.stringify(error?.response?.data)}`);
+      throw new Error(
+        `Failed to exchange code for token: ${r?.status ?? 'unknown'} ${JSON.stringify(r?.data ?? error?.message)}`,
+      );
     }
   }
 
   async getGHLUser(accessToken: string, userId: string): Promise<GHLUser> {
-    const BASE_URL = 'https://services.leadconnectorhq.com';
-    
     try {
-      const response = await axios.get(
-        `${BASE_URL}/users/${userId}`,
+      const response = await this.http().get(
+        `${GHL_BASE}/users/${encodeURIComponent(userId)}`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            Version: '2021-07-28',
-            Accept: 'application/json',
           },
-          timeout: 15000,
         },
       );
 
       return response.data;
     } catch (error) {
-      console.error('[OAuth] Failed to fetch GHL user', {
-        status: error?.response?.status,
-        statusText: error?.response?.statusText,
-        data: error?.response?.data,
+      const r = error?.response;
+      this.logger.error('[OAuth] Failed to fetch GHL user', {
+        status: r?.status,
+        statusText: r?.statusText,
+        data: r?.data,
         message: error?.message,
       });
-      throw new Error(`Failed to fetch GHL user: ${error?.response?.status} ${JSON.stringify(error?.response?.data || error.message)}`);
+      throw new Error(
+        `Failed to fetch GHL user: ${r?.status ?? 'unknown'} ${JSON.stringify(r?.data ?? error?.message)}`,
+      );
     }
   }
 
-  async getGHLAccount(accessToken: string, companyId: string): Promise<any> {
-    const BASE_URL = 'https://services.leadconnectorhq.com';
-    
+  async getGHLLocation(accessToken: string, locationId: string): Promise<any> {
     try {
-      const response = await axios.get(
-        `${BASE_URL}/companies/${companyId}`,
+      const response = await this.http().get(
+        `${GHL_BASE}/locations/${encodeURIComponent(locationId)}`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            Version: '2021-07-28',
-            Accept: 'application/json',
           },
-          timeout: 15000,
         },
       );
 
       return response.data;
     } catch (error) {
-      console.error('[OAuth] Failed to fetch GHL account', {
-        status: error?.response?.status,
-        statusText: error?.response?.statusText,
-        data: error?.response?.data,
+      const r = error?.response;
+      this.logger.error('[OAuth] Failed to fetch GHL location', {
+        status: r?.status,
+        statusText: r?.statusText,
+        data: r?.data,
         message: error?.message,
       });
-      throw new Error(`Failed to fetch GHL account: ${error?.response?.status} ${JSON.stringify(error?.response?.data || error.message)}`);
+      throw new Error(
+        `Failed to fetch GHL location: ${r?.status ?? 'unknown'} ${JSON.stringify(r?.data ?? error?.message)}`,
+      );
     }
   }
 
   async handleOAuthCallback(code: string): Promise<{ accessToken: string; user: any }> {
     // Exchange code for GHL token
     const ghlToken = await this.exchangeCodeForToken(code);
-    
-    console.log('[OAuth] Token received', {
-      userId: ghlToken.userId,
-      companyId: ghlToken.companyId,
-      locationId: ghlToken.locationId,
-    });
-    
-    if (!ghlToken.userId || !ghlToken.companyId) {
-      throw new Error('Token response missing userId or companyId');
-    }
-    
-    const ghlUser = await this.getGHLUser(ghlToken.access_token, ghlToken.userId);
-    const ghlAccount = await this.getGHLAccount(ghlToken.access_token, ghlToken.companyId);
 
-    // Find or create organization
+    const accessToken = ghlToken.access_token;
+    const userId = ghlToken.userId;
+    const locationId = ghlToken.locationId;
+
+    if (!userId) {
+      throw new Error('Token response missing userId');
+    }
+    if (!locationId) {
+      throw new Error('Token response missing locationId');
+    }
+
+    // Fetch user and location details
+    const [ghlUser, ghlLocation] = await Promise.all([
+      this.getGHLUser(accessToken, userId),
+      this.getGHLLocation(accessToken, locationId),
+    ]);
+
+    // Find or create organization (using locationId as the account identifier)
     let organization = await this.prisma.organization.findUnique({
-      where: { ghl_account_id: ghlAccount.id },
+      where: { ghl_account_id: locationId },
     });
 
     if (!organization) {
       organization = await this.prisma.organization.create({
         data: {
-          ghl_account_id: ghlAccount.id,
-          name: ghlAccount.name,
+          ghl_account_id: locationId,
+          name: ghlLocation.name || ghlLocation.companyName || 'Organization',
           planType: 'free',
           status: 'active',
           ghl_access_token: ghlToken.access_token,
@@ -162,7 +191,7 @@ export class AuthService {
         },
       });
 
-      // Create default space and folder
+      // Create default space
       await this.prisma.space.create({
         data: {
           organization_id: organization.id,

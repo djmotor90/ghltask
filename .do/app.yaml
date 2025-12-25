@@ -22,6 +22,9 @@ services:
     scope: RUN_AND_BUILD_TIME
   - key: GHL_REDIRECT_URI
     scope: RUN_AND_BUILD_TIME
+  - key: GHL_SCOPES
+    value: "locations.readonly users.readonly oauth.readonly"
+    scope: RUN_AND_BUILD_TIME
   - key: API_PORT
     value: "3001"
   - key: WEB_URL
