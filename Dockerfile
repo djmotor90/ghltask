@@ -34,17 +34,24 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Install PM2 globally
+RUN npm install -g pm2
+
 # Copy built files and node_modules
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/apps/web/.next ./apps/web/.next
 COPY --from=builder /app/apps/web/package.json ./apps/web/
 COPY --from=builder /app/apps/web/public ./apps/web/public
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/package.json ./apps/api/
 
-EXPOSE 3000
+# Copy ecosystem config
+COPY ecosystem.config.js ./
+
+EXPOSE 3000 3001
 
 ENV PORT=3000
 
-# Start Next.js from the web directory
-WORKDIR /app/apps/web
-CMD ["../../node_modules/.bin/next", "start", "-p", "3000"]
+# Start both services with PM2
+CMD ["pm2-runtime", "start", "ecosystem.config.js", "--env", "production"]

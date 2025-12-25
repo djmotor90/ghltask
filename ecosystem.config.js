@@ -4,15 +4,16 @@ module.exports = {
       "name": "ghl-api",
       "script": "dist/main.js",
       "cwd": "./apps/api",
-      "instances": "max",
-      "exec_mode": "cluster",
+      "instances": 1,
+      "exec_mode": "fork",
       "env": {
-        "NODE_ENV": "development",
+        "NODE_ENV": "production",
         "PORT": 3001
       },
-      "error_file": "logs/api-error.log",
-      "out_file": "logs/api-out.log",
-      "log_date_format": "YYYY-MM-DD HH:mm:ss Z"
+      "env_production": {
+        "NODE_ENV": "production",
+        "PORT": 3001
+      }
     },
     {
       "name": "ghl-web",
@@ -22,11 +23,11 @@ module.exports = {
       "instances": 1,
       "exec_mode": "fork",
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "production"
       },
-      "error_file": "logs/web-error.log",
-      "out_file": "logs/web-out.log",
-      "log_date_format": "YYYY-MM-DD HH:mm:ss Z"
+      "env_production": {
+        "NODE_ENV": "production"
+      }
     }
   ]
 }
