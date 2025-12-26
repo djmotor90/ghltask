@@ -114,7 +114,7 @@ export interface Task {
   created_by: string;
   created_at: Date;
   updated_at: Date;
-  custom_fields: Record<string, any>;
+  custom_fields: Record<string, unknown>;
   color?: string;
   archived_at?: Date;
 }
@@ -204,8 +204,8 @@ export interface TaskFieldValue {
   id: string;
   task_id: string;
   field_id: string;
-  value: any;
-  computed_value?: any;
+  value: unknown;
+  computed_value?: unknown;
   updated_at: Date;
 }
 
@@ -232,7 +232,7 @@ export interface ActivityLog {
   entity_id: string;
   action: ActivityAction;
   user_id?: string;
-  changes?: Record<string, any>;
+  changes?: Record<string, unknown>;
   created_at: Date;
 }
 
@@ -282,7 +282,7 @@ export interface CreateTaskDto {
   start_date?: Date;
   estimated_hours?: number;
   parent_task_id?: string;
-  custom_fields?: Record<string, any>;
+  custom_fields?: Record<string, unknown>;
 }
 
 export interface UpdateTaskDto {
@@ -295,7 +295,7 @@ export interface UpdateTaskDto {
   start_date?: Date;
   estimated_hours?: number;
   time_spent?: number;
-  custom_fields?: Record<string, any>;
+  custom_fields?: Record<string, unknown>;
 }
 
 export interface CreateCommentDto {
@@ -318,7 +318,7 @@ export interface PaginatedResponse<T> {
 }
 
 // WebSocket Types
-export interface WebSocketMessage<T = any> {
+export interface WebSocketMessage<T = unknown> {
   event: string;
   payload: T;
   timestamp: number;
@@ -326,6 +326,6 @@ export interface WebSocketMessage<T = any> {
 
 export interface TaskUpdateEvent {
   task_id: string;
-  changes: Record<string, any>;
+  changes: Record<string, unknown>;
   updated_by: string;
 }

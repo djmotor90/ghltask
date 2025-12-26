@@ -3,10 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import axios, { AxiosInstance } from 'axios';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { JWTPayload, GHLTokenResponse, GHLUser } from '@ghl-task/types';
+import { JWTPayload, GHLTokenResponse, GHLUser, UserRole } from '@ghl-task/types';
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 const GHL_API_VERSION = '2021-07-28';
+type GHLLocation = { name?: string; companyName?: string } & Record<string, unknown>;
 
 @Injectable()
 export class AuthService {
@@ -126,7 +127,7 @@ export class AuthService {
     }
   }
 
-  async getGHLLocation(accessToken: string, locationId: string): Promise<any> {
+  async getGHLLocation(accessToken: string, locationId: string): Promise<GHLLocation> {
     try {
       const response = await this.http().get(
         `${GHL_BASE}/locations/${encodeURIComponent(locationId)}`,
@@ -137,7 +138,7 @@ export class AuthService {
         },
       );
 
-      return response.data;
+      return response.data as GHLLocation;
     } catch (error) {
       const r = error?.response;
       this.logger.error('[OAuth] Failed to fetch GHL location', {
@@ -152,7 +153,10 @@ export class AuthService {
     }
   }
 
-  async handleOAuthCallback(code: string): Promise<{ accessToken: string; user: any }> {
+  async handleOAuthCallback(code: string): Promise<{
+    accessToken: string;
+    user: { id: string; email: string; fullName: string; organization_id: string; role: UserRole };
+  }> {
     // Exchange code for GHL token
     const ghlToken = await this.exchangeCodeForToken(code);
 
@@ -173,6 +177,13 @@ export class AuthService {
       this.getGHLLocation(ghlAccessToken, locationId),
     ]);
 
+    const locationName =
+      typeof ghlLocation.name === 'string'
+        ? ghlLocation.name
+        : typeof ghlLocation.companyName === 'string'
+          ? ghlLocation.companyName
+          : undefined;
+
     // Find or create organization (using locationId as the account identifier)
     let organization = await this.prisma.organization.findUnique({
       where: { ghl_account_id: locationId },
@@ -184,7 +195,7 @@ export class AuthService {
       organization = await this.prisma.organization.create({
         data: {
           ghl_account_id: locationId,
-          name: ghlLocation.name || ghlLocation.companyName || 'Organization',
+          name: locationName || 'Organization',
           planType: 'free',
           status: 'active',
           ghl_access_token: ghlToken.access_token,
@@ -242,7 +253,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       organization_id: organization.id,
-      role: user.role as any,
+      role: user.role as UserRole,
     };
 
     const accessToken = this.jwtService.sign(payload);
@@ -254,16 +265,17 @@ export class AuthService {
         email: user.email,
         fullName: user.full_name,
         organization_id: organization.id,
+        role: user.role as UserRole,
       },
     };
   }
 
-  generateTokens(user: any): { accessToken: string; refreshToken: string } {
+  generateTokens(user: { id: string; email: string; organization_id: string; role: UserRole }): { accessToken: string; refreshToken: string } {
     const payload: JWTPayload = {
       sub: user.id,
       email: user.email,
       organization_id: user.organization_id,
-      role: user.role as any,
+      role: user.role as UserRole,
     };
 
     const accessToken = this.jwtService.sign(payload);

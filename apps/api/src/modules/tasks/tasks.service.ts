@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CreateTaskDto, UpdateTaskDto } from '@ghl-task/types';
 
@@ -31,21 +32,34 @@ export class TasksService {
   }
 
   async createTask(orgId: string, listId: string, userId: string, data: CreateTaskDto) {
-    return this.prisma.task.create({
-      data: {
-        ...data,
-        organization_id: orgId,
-        list_id: listId,
-        created_by: userId,
-      },
-      include: { assignee: true },
-    });
+    const payload: Prisma.TaskUncheckedCreateInput = {
+      ...data,
+      organization_id: orgId,
+      list_id: listId,
+      created_by: userId,
+      custom_fields: (data.custom_fields as Prisma.InputJsonValue) ?? {},
+    };
+
+    if (data.assigned_to) {
+      payload.assigned_to = data.assigned_to;
+    }
+
+    return this.prisma.task.create({ data: payload, include: { assignee: true } });
   }
 
   async updateTask(taskId: string, data: UpdateTaskDto) {
+    const payload: Prisma.TaskUncheckedUpdateInput = {
+      ...data,
+      custom_fields: data.custom_fields as Prisma.InputJsonValue,
+    };
+
+    if (data.assigned_to !== undefined) {
+      payload.assigned_to = data.assigned_to;
+    }
+
     return this.prisma.task.update({
       where: { id: taskId },
-      data,
+      data: payload,
       include: { assignee: true },
     });
   }

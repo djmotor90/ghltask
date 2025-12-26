@@ -23,6 +23,12 @@ export const spacesApi = {
   delete: (id: string) => client.delete(`/spaces/${id}`),
 };
 
+export const listsApi = {
+  getBySpace: (spaceId: string) => client.get(`/lists/space/${spaceId}`),
+  getById: (listId: string) => client.get(`/lists/${listId}`),
+  createInSpace: (spaceId: string, data: any) => client.post(`/lists/space/${spaceId}`, data),
+};
+
 export const tasksApi = {
   getByList: (listId: string) => client.get<Task[]>(`/tasks/list/${listId}`),
   getById: (taskId: string) => client.get<Task>(`/tasks/${taskId}`),

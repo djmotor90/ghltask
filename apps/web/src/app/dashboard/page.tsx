@@ -136,12 +136,8 @@ function DashboardContent() {
               {spaces.map((space) => (
                 <div
                   key={space.id}
-                  onClick={() => setSelectedSpace(space)}
-                  className={`bg-white rounded-lg p-6 cursor-pointer transition-all ${
-                    selectedSpace?.id === space.id
-                      ? 'ring-2 ring-blue-500 shadow-md'
-                      : 'border border-gray-200 hover:shadow-md'
-                  }`}
+                  onClick={() => router.push(`/spaces/${space.id}`)}
+                  className="bg-white rounded-lg p-6 cursor-pointer transition-all border border-gray-200 hover:shadow-md"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">

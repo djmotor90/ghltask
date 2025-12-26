@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Param } from '@nestjs/common';
 import { SpacesService } from './spaces.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { OrgId } from '../../common/decorators/user.decorator';
@@ -11,6 +11,11 @@ export class SpacesController {
   @Get()
   async getSpaces(@OrgId() orgId: string) {
     return this.service.getSpaces(orgId);
+  }
+
+  @Get(':id')
+  async getSpace(@OrgId() orgId: string, @Param('id') id: string) {
+    return this.service.getSpace(orgId, id);
   }
 
   @Post()
