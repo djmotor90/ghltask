@@ -1,12 +1,13 @@
 'use client';
+export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import { useTaskStore } from '@/store/tasks';
-import { spacesApi, tasksApi, organizationsApi } from '@/lib/api';
+import { spacesApi, organizationsApi } from '@/lib/api';
 
-export default function Dashboard() {
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -14,8 +15,8 @@ export default function Dashboard() {
   const [selectedSpace, setSelectedSpace] = useState<any>(null);
   const [organization, setOrganization] = useState<any>(null);
   
-  const { user, token, setToken, setUser, logout } = useAuthStore();
-  const { tasks, setTasks } = useTaskStore();
+  const { user, token, setToken, logout } = useAuthStore();
+  const { tasks } = useTaskStore();
 
   // Handle OAuth callback token
   useEffect(() => {
@@ -269,5 +270,13 @@ export default function Dashboard() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
