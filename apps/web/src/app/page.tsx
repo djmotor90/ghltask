@@ -6,11 +6,13 @@ export default function Page() {
   const [authUrl, setAuthUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || '/api';
+
   useEffect(() => {
     // Get OAuth authorization URL from backend
     const getAuthUrl = async () => {
       try {
-        const response = await fetch('http://localhost:3001/auth/authorize');
+        const response = await fetch(`${apiBase}/auth/authorize`);
         const data = await response.json();
         setAuthUrl(data.url);
       } catch (err) {
