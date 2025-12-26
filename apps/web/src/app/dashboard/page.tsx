@@ -28,18 +28,24 @@ function DashboardContent() {
     }
   }, [searchParams, setToken]);
 
-  // Fetch initial data
+  // Initialize from persisted token if present
   useEffect(() => {
-    if (!token) {
-      router.push('/');
-      return;
+    if (!token && typeof window !== 'undefined') {
+      const persisted = localStorage.getItem('access_token');
+      if (persisted) {
+        setToken(persisted);
+      }
     }
+  }, [token, setToken]);
+
+  // Fetch initial data once token is available
+  useEffect(() => {
+    if (!token) return;
 
     async function loadData() {
       try {
         setLoading(true);
 
-        // Fetch organization and spaces
         const [orgRes, spacesRes] = await Promise.all([
           organizationsApi.getProfile(),
           spacesApi.getAll(),
@@ -59,7 +65,7 @@ function DashboardContent() {
     }
 
     loadData();
-  }, [token, router]);
+  }, [token]);
 
   const handleLogout = () => {
     logout();
