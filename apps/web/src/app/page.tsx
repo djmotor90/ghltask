@@ -1,20 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import client from '@/lib/api-client';
 
 export default function Page() {
   const [authUrl, setAuthUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || '/api';
-
   useEffect(() => {
     // Get OAuth authorization URL from backend
     const getAuthUrl = async () => {
       try {
-        const response = await fetch(`${apiBase}/auth/authorize`);
-        const data = await response.json();
-        setAuthUrl(data.url);
+        const response = await client.get<{ url: string }>('/auth/authorize');
+        setAuthUrl(response.data.url);
       } catch (err) {
         setError('Failed to get authorization URL');
         console.error(err);
